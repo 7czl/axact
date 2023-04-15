@@ -10,9 +10,9 @@ use tracing_subscriber;
 async fn main() {
     tracing_subscriber::fmt::init();
     let router = Router::new()
-        .route("/", get(cpus_get)).with_state(AppState {
+        .route("/api/cpus", get(cpus_get)).with_state(AppState {
         sys: Arc::new(Mutex::new(System::new())),
-    }).route("/", rootget);
+    }).route("/", get(rootget));
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     tracing::debug!("");
     Server::bind(&addr)
