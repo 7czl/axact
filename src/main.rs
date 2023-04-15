@@ -1,6 +1,7 @@
 use axum::extract::State;
+use axum::response::{IntoResponse, Html};
 use axum::routing::get;
-use axum::{Router, Server};
+use axum::{Router, Server, Json};
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use sysinfo::{CpuExt, System, SystemExt};
@@ -10,9 +11,11 @@ use tracing_subscriber;
 async fn main() {
     tracing_subscriber::fmt::init();
     let router = Router::new()
-        .route("/api/cpus", get(cpus_get)).with_state(AppState {
-        sys: Arc::new(Mutex::new(System::new())),
-    }).route("/", get(rootget));
+        .route("/api/cpus", get(cpus_get))
+        .with_state(AppState {
+            sys: Arc::new(Mutex::new(System::new())),
+        })
+        .route("/", get(rootget));
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     tracing::debug!("");
     Server::bind(&addr)
@@ -24,20 +27,16 @@ async fn main() {
 struct AppState {
     sys: Arc<Mutex<System>>,
 }
-
-async fn rootget() -> &'static str {
-    "Hello"
+#[axum::debug_handler]
+async fn rootget() -> impl IntoResponse {
+    let markup = tokio::fs::read_to_string("src/index.html").await.unwrap();
+    // hot reload for devlopment env
+    Html(markup)
 }
-
-async fn cpus_get(State(state): State<AppState>) -> String {
-    use std::fmt::Write;
-    let mut s = String::new();
+#[axum::debug_handler]
+async fn cpus_get(State(state): State<AppState>) -> impl IntoResponse {
     let mut sys = state.sys.lock().unwrap();
     sys.refresh_cpu();
-    for (index, cpu) in sys.cpus().iter().enumerate() {
-        let i = index + 1;
-        let usage = cpu.cpu_usage();
-        writeln!(&mut s, "CPU {i} {usage} ").unwrap();
-    }
-    s
+    let v: Vec<f32> = sys.cpus().iter().map(|cpu| cpu.cpu_usage()).collect();
+    Json(v)
 }
