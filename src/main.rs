@@ -9,9 +9,10 @@ use tracing_subscriber;
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
-    let router = Router::new().route("/", get(rootget)).with_state(AppState {
+    let router = Router::new()
+        .route("/", get(cpus_get)).with_state(AppState {
         sys: Arc::new(Mutex::new(System::new())),
-    });
+    }).route("/", rootget);
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     tracing::debug!("");
     Server::bind(&addr)
@@ -24,7 +25,11 @@ struct AppState {
     sys: Arc<Mutex<System>>,
 }
 
-async fn rootget(State(state): State<AppState>) -> String {
+async fn rootget() -> &'static str {
+    "Hello"
+}
+
+async fn cpus_get(State(state): State<AppState>) -> String {
     use std::fmt::Write;
     let mut s = String::new();
     let mut sys = state.sys.lock().unwrap();
