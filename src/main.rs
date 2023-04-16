@@ -16,7 +16,7 @@ async fn main() {
         .with_state(AppState {
             sys: Arc::new(Mutex::new(System::new())),
         })
-        .route("/index.js", get(indexjs_fetch))
+        .route("/index.mjs", get(indexmjs_fetch))
         .route("/", get(rootget));
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     tracing::debug!("");
@@ -36,8 +36,8 @@ async fn rootget() -> impl IntoResponse {
     Html(markup)
 }
 #[axum::debug_handler]
-async fn indexjs_fetch() -> impl IntoResponse {
-    let markup = tokio::fs::read_to_string("src/index.js").await.unwrap();
+async fn indexmjs_fetch() -> impl IntoResponse {
+    let markup = tokio::fs::read_to_string("src/index.mjs").await.unwrap();
     Response::builder()
         .header("content-type", "application/javascript")
         .body(markup)
