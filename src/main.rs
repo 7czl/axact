@@ -16,6 +16,7 @@ async fn main() {
         .with_state(AppState {
             sys: Arc::new(Mutex::new(System::new())),
         })
+        .route("/index.css", get(indexcss_fetch))
         .route("/index.mjs", get(indexmjs_fetch))
         .route("/", get(rootget));
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -49,4 +50,12 @@ async fn cpus_get(State(state): State<AppState>) -> impl IntoResponse {
     sys.refresh_cpu();
     let v: Vec<f32> = sys.cpus().iter().map(|cpu| cpu.cpu_usage()).collect();
     Json(v)
+}
+#[axum::debug_handler]
+async fn indexcss_fetch() -> impl IntoResponse {
+    let markup = tokio::fs::read_to_string("src/index.css").await.unwrap();
+    Response::builder()
+        .header("content-type", "text/css;charset=utf-8")
+        .body(markup)
+        .unwrap()
 }
