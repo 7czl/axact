@@ -28,8 +28,10 @@ async fn main() {
         loop {
             sys.refresh_cpu();
             let v = sys.cpus().iter().map(|cpu| cpu.cpu_usage()).collect();
-            let mut cpus = appstate.cpus.lock().unwrap();
-            *cpus = v;
+            {
+                let mut cpus = appstate.cpus.lock().unwrap();
+                *cpus = v;
+            }
             std::thread::sleep(System::MINIMUM_CPU_UPDATE_INTERVAL);
         }
 
@@ -63,8 +65,8 @@ async fn cpus_get(State(state): State<AppState>) -> impl IntoResponse {
     let lock_start = std::time::Instant::now();
 
     let v = state.cpus.lock().unwrap().clone();
-    let lock_elapse = lock_start.elapsed().as_millis();
-    println!("Lock time: {lock_elapse} ms");
+    let lock_elapse = lock_start.elapsed().as_micros();
+    println!("Lock time: {lock_elapse} micros");
     // fixme: intensive operate. need to do in background.
     // sys.refresh_cpu();
     // let v: Vec<f32> = sys.cpus().iter().map(|cpu| cpu.cpu_usage()).collect();
