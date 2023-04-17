@@ -62,11 +62,10 @@ async fn indexmjs_fetch() -> impl IntoResponse {
 #[axum::debug_handler]
 async fn cpus_get(State(state): State<AppState>) -> impl IntoResponse {
     // let mut sys = state.sys.lock().unwrap();
-    let lock_start = std::time::Instant::now();
-
+    // let lock_start = std::time::Instant::now();
     let v = state.cpus.lock().unwrap().clone();
-    let lock_elapse = lock_start.elapsed().as_micros();
-    println!("Lock time: {lock_elapse} micros");
+    // let lock_elapse = lock_start.elapsed().as_micros();
+    // println!("Lock time: {lock_elapse} micros");
     // fixme: intensive operate. need to do in background.
     // sys.refresh_cpu();
     // let v: Vec<f32> = sys.cpus().iter().map(|cpu| cpu.cpu_usage()).collect();
